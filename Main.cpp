@@ -5,10 +5,12 @@
 #include <windows.h>
 #include <conio.h>
 #include <algorithm>
+#include <filesystem>
 
 #define pi 3.14159265359
 
 using namespace std;
+namespace fs = std::filesystem;
 
 class pt {
 public:
@@ -103,6 +105,7 @@ struct mb {
 const char wall = char(219), empt = char(176), invisible = char(32), man = char(202), purpose = char(157), mark = '+', tnt = 'O';
 const vector<pt> sides = { pt(0, -1), pt(1, -1), pt(1, 0), pt(1, 1), pt(0, 1), pt(-1, 1), pt(-1, 0),  pt(-1, -1)};
 const vector<char> csides = { 's', 'c', 'd', 'e', 'w', 'q', 'a', 'z' };
+const string name_file = "\\mapp.txt";
 
 void stopp(const std::string& message, const int i) {
 	std::cout << message;
@@ -341,9 +344,59 @@ void show(const vector<vector<vector<char>>>& place, const mb& bot) {
 	cout << res;
 }
 
+bool isfile(string way_to_file) {
+	ifstream f(way_to_file);
+	if (!f)
+		return false;
+	return true;
+}
+
+int lastsign(string s, char symbol) { //index
+	int index = -1;
+	if (s.size() != 0) {
+		for (int i = s.size() - 1; i >= 0; --i)
+			if (s[i] == symbol) {
+				index = i;
+				break;
+			}
+	}
+	return index;
+}
+
+void mkfile(string way_to_file, vector<string> lines) { //create a file with default lines in this
+	string w = way_to_file.substr(0, lastsign(way_to_file, '\\'));
+	fs::create_directories(w);
+	ofstream f(way_to_file);
+	if (lines.size() == 0)
+		f << "";
+	else {
+		for (size_t i = 0; i < lines.size() - 1; ++i)
+			f << lines[i] << endl;
+		f << lines[lines.size() - 1];
+	}
+	f.close();
+}
+
+string chegin() {
+	wchar_t buffer[MAX_PATH];
+	wstring wway = L"";
+	GetModuleFileName(NULL, buffer, sizeof(buffer) / sizeof(buffer[0]));
+	wway = buffer;
+	string way(wway.begin(), wway.end());
+	way = way.substr(0, lastsign(way, '\\')) + name_file;
+	if (isfile(way) == false) { //creating file with standard matrix of game map
+		string s = "";
+		vector<string> v(1, s);
+		mkfile(way, v);
+	}
+	else {}
+	return way;
+}
+
 int main() {
+	const string wtf = chegin();
 	mb bot;
-	vector<vector<vector<char>>> place = fill("C:\\mapp.txt", bot);
+	vector<vector<vector<char>>> place = fill(wtf, bot);
 	const pt ptsize(place.size(), place[0].size());
 
 	bot.assign(&sides);
